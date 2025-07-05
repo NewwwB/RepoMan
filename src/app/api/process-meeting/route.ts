@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
         name: summaries[0]!.headline,
       },
     });
-    return { success: true, message: "Meeting Processed" };
+    return NextResponse.json({ success: true, message: "Meeting Processed" });
   } catch (e) {
     console.error(e);
     return NextResponse.json(
