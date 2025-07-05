@@ -8,7 +8,7 @@ import { db } from "~/server/db";
 
 export async function POST(request: Request) {
   const body = await request.text();
-  const signature = (await headers()).get("Stripe-Signature") as string;
+  const signature = (await headers()).get("Stripe-Signature")!;
   let event: Stripe.Event;
 
   try {
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   console.log("----------------------------------------------");
 
   if (event.type === "checkout.session.completed") {
-    const credits = Number(session.metadata?.["credits"]);
+    const credits = Number(session.metadata?.credits);
     const userId = session.client_reference_id;
     if (!userId || !credits) {
       return NextResponse.json(
