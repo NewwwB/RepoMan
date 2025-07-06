@@ -7,59 +7,54 @@ export async function POST(request: NextRequest) {
   try {
     const evt = await verifyWebhook(request);
 
-    // Do something with payload
-    // For this guide, log payload to console
     const { id } = evt.data;
     const eventType = evt.type;
 
-    console.log(
-      `Received webhook with ID ${id} and event type of ${eventType}`,
-    );
-    console.log("Webhook payload:", evt.data);
+    console.log(`Received webhook: ${eventType}, user ID: ${id}`);
 
-    const client = await clerkClient();
-    const user = await client.users.getUser(id!);
+    if (eventType === "user.deleted") {
+      console.log("Deleting user from DB...");
+      await db.user.delete({
+        where: { id },
+      });
+      return new Response("User deleted", { status: 200 });
+    }
 
-    const dbUser = await db.user.findUnique({
-      where: {
-        id: id,
-      },
-    });
-    if (eventType === "user.created" || "user.update") {
+    const user = await (await clerkClient()).users.getUser(id!);
+    console.log("Fetched Clerk user:", user);
+
+    const dbUser = await db.user.findUnique({ where: { id } });
+
+    if (eventType === "user.created" || eventType === "user.updated") {
+      const userData = {
+        emailAddress: user.emailAddresses[0]?.emailAddress || "",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        imageUrl: user.imageUrl,
+      };
+
       if (!dbUser) {
+        console.log("Creating user in DB...");
         await db.user.create({
           data: {
-            emailAddress: user.emailAddresses[0]?.emailAddress || "",
-            firstName: user.firstName || "",
-            lastName: user.lastName || "",
-            imageUrl: user.imageUrl,
+            id,
+            ...userData,
           },
         });
       } else {
+        console.log("Updating user in DB...");
         await db.user.update({
-          where: {
-            id: id,
-          },
-          data: {
-            emailAddress: user.emailAddresses[0]?.emailAddress || "",
-            firstName: user.firstName || "",
-            lastName: user.lastName || "",
-            imageUrl: user.imageUrl,
-          },
+          where: { id },
+          data: userData,
         });
       }
-    }
-    if (eventType === "user.deleted") {
-      await db.user.delete({
-        where: {
-          id: id,
-        },
-      });
+
+      return new Response("User created/updated", { status: 200 });
     }
 
-    return new Response("Webhook received", { status: 200 });
-  } catch (err) {
-    console.error("Error verifying webhook:", err);
-    return new Response("Error verifying webhook", { status: 400 });
+    return new Response("Unhandled event type", { status: 400 });
+  } catch (err: any) {
+    console.error("Error handling webhook:", err.message, err);
+    return new Response("Webhook processing failed", { status: 400 });
   }
 }
