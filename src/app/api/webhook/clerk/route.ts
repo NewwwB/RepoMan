@@ -35,10 +35,17 @@ export async function POST(request: NextRequest) {
 
       if (!dbUser) {
         console.log("Creating user in DB...");
-        await db.user.create({
+        const newUser = await db.user.create({
           data: {
             id,
             ...userData,
+          },
+        });
+        const projectId = "ecd0e90d-a070-4e33-94a0-940f76039e1c";
+        await db.userToProject.create({
+          data: {
+            userId: newUser.id,
+            projectId: projectId,
           },
         });
       } else {
