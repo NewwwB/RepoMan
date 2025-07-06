@@ -11,6 +11,7 @@ const ArchiveButton = () => {
   const archiveProject = api.project.archiveProject.useMutation();
   const { projectId } = useProject();
   const refetch = useRefetch();
+
   return (
     <Button
       disabled={archiveProject.isPending}
@@ -20,7 +21,7 @@ const ArchiveButton = () => {
         const confirm = window.confirm(
           "are you sure you want to archive this project?",
         );
-        if (confirm) {
+        if (confirm && projectId) {
           archiveProject.mutate(
             { projectId },
             {

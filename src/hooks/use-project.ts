@@ -7,16 +7,13 @@ const useProject = () => {
     console.error("Failed to fetch projects", error);
   }
 
-  const [projectId, setProjectId] = useLocalStorage<string | null>(
-    "RepoMan_project_id",
-    null,
-  );
+  const [projectId, setProjectId] = useLocalStorage("RepoMan_project_id", "");
 
   if (
     projects &&
     projects.length > 0 &&
     projects[0]?.id !== undefined &&
-    !projectId
+    projectId === ""
   ) {
     setProjectId(projects[0].id);
   }
