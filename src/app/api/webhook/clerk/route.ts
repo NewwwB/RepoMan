@@ -25,27 +25,29 @@ export async function POST(request: NextRequest) {
         id: id,
       },
     });
-    if (!dbUser) {
-      await db.user.create({
-        data: {
-          emailAddress: user.emailAddresses[0]?.emailAddress || "",
-          firstName: user.firstName || "",
-          lastName: user.lastName || "",
-          imageUrl: user.imageUrl,
-        },
-      });
-    } else {
-      await db.user.update({
-        where: {
-          id: id,
-        },
-        data: {
-          emailAddress: user.emailAddresses[0]?.emailAddress || "",
-          firstName: user.firstName || "",
-          lastName: user.lastName || "",
-          imageUrl: user.imageUrl,
-        },
-      });
+    if (eventType === "user.created" || "user.update") {
+      if (!dbUser) {
+        await db.user.create({
+          data: {
+            emailAddress: user.emailAddresses[0]?.emailAddress || "",
+            firstName: user.firstName || "",
+            lastName: user.lastName || "",
+            imageUrl: user.imageUrl,
+          },
+        });
+      } else {
+        await db.user.update({
+          where: {
+            id: id,
+          },
+          data: {
+            emailAddress: user.emailAddresses[0]?.emailAddress || "",
+            firstName: user.firstName || "",
+            lastName: user.lastName || "",
+            imageUrl: user.imageUrl,
+          },
+        });
+      }
     }
     if (eventType === "user.deleted") {
       await db.user.delete({
